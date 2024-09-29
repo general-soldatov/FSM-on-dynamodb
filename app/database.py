@@ -1,37 +1,28 @@
-import pickle
-import json
 import logging
 
-import boto3
 from boto3.dynamodb.conditions import Key
-from os import getenv
-from dotenv import load_dotenv
 
 from aiogram.fsm.storage.base import BaseStorage, StorageKey
 from aiogram.fsm.state import State
 from typing import Any, Dict, Optional
 
-from .config import dynamodb_config
+from config import dynamodb_config, dynamodb_client
 
 logger = logging.getLogger(__name__)
 
-class YDBStorage(BaseStorage):
-    """YDB storage for FSM"""
+class FSMDynamodb(BaseStorage):
+    """ FSM on DynamoDB.
+    This class stores information about user states in the FSM dialog.
+    """
 
-    def __init__(
-        self,
-        dynamodb=None,
-        table_name: str = "fsm_storage",
-    ) -> None:
-
-        # Database
+    def __init__(self,
+                 dynamodb=dynamodb_config,
+                 client=dynamodb_client,
+                 table_name: str = "fsm_storage") -> None:
+        # Dynamodatabase
         self.dynamodb = dynamodb
         self.table_name = table_name
-
-        if not self.dynamodb:
-            load_dotenv()
-            self.dynamodb = dynamodb_config
-
+        self.db_client = client
 
     def _create_table(self) -> None:
         """
@@ -42,7 +33,7 @@ class YDBStorage(BaseStorage):
             KeySchema = [
                 {
                     'AttributeName': 'key',
-                    'KeyType': 'HASH'  # Ключ партицирования
+                    'KeyType': 'HASH'
                 }
             ],
             AttributeDefinitions = [
@@ -53,28 +44,13 @@ class YDBStorage(BaseStorage):
             ]
         )
 
-    def _key(self, key: StorageKey) -> str:
+    @staticmethod
+    def _key(key: StorageKey) -> str:
         """
         Create a key for every uniqe user, chat and bot
         """
-        result_string = (
-            str(key.bot_id) + ":" + str(key.chat_id) + ":" + str(key.user_id)
-        )
-        return result_string
+        return f'{key.bot_id}:{key.chat_id}:{key.user_id}'
 
-    def _ser(self, obj: object) -> str | bytes | None:
-        """
-        Serialize object
-        """
-        try:
-            match self.serializing_method:
-                case "pickle":
-                    return pickle.dumps(obj)
-                case "json" | _:
-                    return json.dumps(obj)
-        except Exception as e:
-            logger.error(f"Serializing error! {e}")
-            return None
 
     async def set_state(self, key: StorageKey, state: State | None = None) -> None:
         """
@@ -97,7 +73,7 @@ class YDBStorage(BaseStorage):
                 },
                 ReturnValues = "UPDATED_NEW"
             )
-        except BaseException as e:
+        except Exception as e:
             logger.error(f"FSM Storage set_state error: {e}")
 
     async def get_state(self, key: StorageKey) -> Optional[str]:
@@ -107,18 +83,27 @@ class YDBStorage(BaseStorage):
         :param key: storage key
         :return: current state
         """
-        s_key = self._key(key)
-        table = self.dynamodb.Table(self.table_name)
+        def _get_state():
+            s_key = self._key(key)
+            table = self.dynamodb.Table(self.table_name)
+            response = table.get_item(
+                Key = {
+                    'key': s_key
+                }
+            )
+            return response['Item']['state']
 
         try:
-            response = table.query(
-                ProjectionExpression = 'key, state',
-                KeyConditionExpression = Key('key').eq(s_key)
-            )
+            response = _get_state()
+            return response
 
-            return response['Items'][0]['state'] if response['Items'] else None
+        except self.db_client.exceptions.ResourceNotFoundException:
+            self._create_table()
+            return _get_state()
+
         except KeyError:
             return
+
         except BaseException as e:
             logger.error(f"FSM Storage error get_state: {e}")
 
@@ -133,14 +118,18 @@ class YDBStorage(BaseStorage):
         table = self.dynamodb.Table(self.table_name)
 
         try:
-            table.put_item(
-                Item = {
-                        'key': s_key,
-                        'data': data
-                }
-            )
+            table.update_item(
+                Key = {
+                    'key': s_key
+                },
+                UpdateExpression = "set data = :d ",
+                ExpressionAttributeValues = {
+                    ':d': data
+                },
+                ReturnValues = "UPDATED_NEW")
 
-        except BaseException as e:
+
+        except Exception as e:
             logger.error(f"FSM Storage set_data error: {e}")
 
     async def get_data(self, key: StorageKey) -> Optional[Dict[str, Any]]:
@@ -175,27 +164,10 @@ class YDBStorage(BaseStorage):
         :param data: partial data
         :return: new data
         """
-        s_key = self._key(key)
-        table = self.dynamodb.Table(self.table_name)
-
-        try:
-            table.update_item(
-                Key = {
-                    'key': s_key
-                },
-                UpdateExpression = "set data = :d ",
-                ExpressionAttributeValues = {
-                    ':d': data
-                },
-                ReturnValues = "UPDATED_NEW"
-            )
-        except BaseException as e:
-            logger.error(f"FSM Storage update_data error: {e}")
+        self.set_data(key, data)
 
     async def close(self) -> None:
         """
         Close storage (database connection, file or etc.)
         """
-
-        # logger.debug("FSM Storage database has been closed.")
-        self.set_data(self._key)
+        pass
