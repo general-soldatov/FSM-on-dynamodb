@@ -8,7 +8,7 @@
 
 Надстройка над `aiogram` для организации FSM (finite-state-machine) на базе базы данных dynamodb с использованием библиотеки boto3 &amp; botocore. Может быть использована на serverless-решениях AWS и YandexCloud. Установить библиотеку можно с помощью команды:
 ```bash
-pip install dynamodb_fsm
+pip install dynamodb-fsm
 ```
 В GUI облачной панели управления или с помощью CLI создайте динамическую serverless базу данных и сервисный аккаунт с ключом. Для пользователей YandexCloud можете воспользоваться [документацией](https://yandex.cloud/ru/docs/ydb/quickstart).
 Для корректной работы библиотеки `boto3` используется dataclass c переменными окружения, поэтому не забудьте внести следующую информацию в файл `.env`
