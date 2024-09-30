@@ -1,4 +1,5 @@
 # FSM-on-dynamodb
+<<<<<<< HEAD
 
 <a href="https://opensource.org/license/MIT"><img src="https://img.shields.io/badge/license-MIT-green.svg?logo=mit&logoColor=f5f5f5" alt="MIT-license"></a>
 <a href="https://github.com/general-soldatov/FSM-on-dynamodb/"><img src="https://img.shields.io/badge/dynamo-fsm-blue.svg?logo=telegram&logoColor=f5f5f5" alt="dynamo-fsm"></a>
@@ -48,3 +49,8 @@ dp = Dispatcher(storage=storage)
 ```
 
 Актуальная информация о функциях надстройки есть в репозитории [dynamodb-fsm](https://github.com/general-soldatov/FSM-on-dynamodb/)
+=======
+Организация FSM на базе базы данных dynamodb с использованием библиотеки boto3 &amp; botocore
+
+<img src="https://img.shields.io/badge/python-3.9%7C3.10%7C3.11-blue?logo=python&logoColor=f5f5f5" alt="Jokes Card" />
+>>>>>>> 758f86a0abb5d615b3439c9be6c5e259e127d7fc
