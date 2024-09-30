@@ -1,12 +1,13 @@
 import logging
 
+import boto3
 from boto3.dynamodb.conditions import Key
 
 from aiogram.fsm.storage.base import BaseStorage, StorageKey
 from aiogram.fsm.state import State
 from typing import Any, Dict, Optional
 
-from config import dynamodb_config, dynamodb_client
+from .config import config
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +16,11 @@ class FSMDynamodb(BaseStorage):
     This class stores information about user states in the FSM dialog.
     """
 
-    def __init__(self,
-                 dynamodb=dynamodb_config,
-                 client=dynamodb_client,
-                 table_name: str = "fsm_storage") -> None:
+    def __init__(self, config=config, table_name: str = "fsm_storage") -> None:
         # Dynamodatabase
-        self.dynamodb = dynamodb
+        self.dynamodb = boto3.resource('dynamodb', **config)
+        self.db_client = boto3.client('dynamodb', **config)
         self.table_name = table_name
-        self.db_client = client
 
     def _create_table(self) -> None:
         """
@@ -91,7 +89,8 @@ class FSMDynamodb(BaseStorage):
                     'key': s_key
                 }
             )
-            return response['Item']['state']
+            if 'Item' in response:
+                return response['Item'].get('state', None)
 
         try:
             response = _get_state()
@@ -100,9 +99,6 @@ class FSMDynamodb(BaseStorage):
         except self.db_client.exceptions.ResourceNotFoundException:
             self._create_table()
             return _get_state()
-
-        except KeyError:
-            return
 
         except BaseException as e:
             logger.error(f"FSM Storage error get_state: {e}")
