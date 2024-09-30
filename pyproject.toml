@@ -8,9 +8,9 @@ version = "0.0.1"
 authors = [
   { name="Yury Soldatov", email="general-soldatov@mail.ru" },
 ]
-description = "A small example package"
+description = "FSM storage on dynamo data bases for aiogram 3.10"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -18,5 +18,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
+Homepage = "https://github.com/general-soldatov/FSM-on-dynamodb"
 Issues = "https://github.com/pypa/sampleproject/issues"
