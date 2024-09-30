@@ -47,4 +47,4 @@ storage = FSMDynamodb()
 dp = Dispatcher(storage=storage)
 ```
 
-Актуальная информация о функциях надстройки есть в репозитории [dynamodb-fsm](https://github.com/general-soldatov/FSM-on-dynamodb/)
+Актуальная информация о функциях надстройки есть в репозитории [dynamodb-fsm](https://github.com/general-soldatov/FSM-on-dynamodb/tree/main)
