@@ -4,7 +4,7 @@ from boto3.dynamodb.conditions import Key
 
 from aiogram.fsm.storage.base import BaseStorage, StorageKey, DefaultKeyBuilder
 from aiogram.fsm.state import State
-from typing import Any, Dict, Optional, Literal
+from typing import Any, Dict, Optional
 
 from .config import config
 
