@@ -47,4 +47,9 @@ storage = FSMDynamodb()
 dp = Dispatcher(storage=storage)
 ```
 
+Если вы планируете использование aiogram-dialog, то рекомендуется использование следующих надстроек:
+```python
+storage = FSMDynamodb(with_destiny=True)
+```
+Поскольку в хранилище из коробки используется строитель ключей, рекомендуемый aiogram, то при использовании меняйте параметр `with_destiny=True`, по умолчанию равен `False`.
 Актуальная информация о функциях надстройки есть в репозитории [dynamodb-fsm](https://github.com/general-soldatov/FSM-on-dynamodb/tree/main)
